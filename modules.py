@@ -1,4 +1,5 @@
-import os, time, re ,math
+# -*- coding: utf-8 -*-
+import os, time, re ,math, csv
 import sqlite3
 from urllib.request import *
 from urllib.parse import *
@@ -6,7 +7,7 @@ from urllib.error import *
 
 
 class NaverWebtoonCommentScraper:
-	def __init__(self, commentUrl):
+	def __init__(self, commentUrl, reqPageUnit=None):
 		self.html = urlopen(commentUrl).read().decode()
 		self.url = commentUrl
 		self.commentHost = 'http://comic.naver.com/comments/list_comment.nhn'
@@ -16,10 +17,9 @@ class NaverWebtoonCommentScraper:
 			reExp = "{}\s*:\s*(.*)".format(key)
 			find = re.search(reExp,self.html)
 			self.keys[key] = find.group(1).strip(" '\r\n\t")
-
+		if reqPageUnit: self.keys['pageSize'] = reqPageUnit
 	def GetCommentPage(self, nPage):
-		formdata = 'ticket={}&object_id={}&_ts={}&lkey={}&page_size={}&page_no={}&sort=newest'\
-		.format(self.keys['ticket'],self.keys['objectId'],int(time.time()*1000),self.keys['lkey'],self.keys['pageSize'],nPage)
+		formdata = 'ticket={}&object_id={}&_ts={}&lkey={}&page_size={}&page_no={}&sort=newest'.format(self.keys['ticket'],self.keys['objectId'],int(time.time()*1000),self.keys['lkey'],self.keys['pageSize'],nPage)
 		req = Request(self.commentHost,formdata.encode())
 		req.add_header('Referer',self.url)
 		return urlopen(req).read()
@@ -27,7 +27,7 @@ class NaverWebtoonCommentScraper:
 	def GetCommentsTotalPageCount(self):
 		return math.ceil(eval(self.GetCommentPage(1))['total_count'] / int(self.keys['pageSize']))
 
-	def GetCommentsTable(self, reqPgAsSeq, retry=2):  #range(1, 10 + 1) or {1,4,6,10,....} [2,3]
+	def GetCommentsTable(self, reqPgAsSeq, retry = 2):  #range(1, 10 + 1) or {1,4,6,10,....} [2,3]
 		ret = []; faultPage = {}
 		if retry < 0: 
 			faultPage[reqPgAsSeq[0]]=self.GetCommentPage(reqPgAsSeq[0])
@@ -74,7 +74,10 @@ class SQLite3DB:
 					for mskey in missingKeys:
 						tup[mskey] = 'NULL'
 					insExp = 'insert into ' + tblName + ' values' + repr(tuple(tup.values()))
-					self.cursor.execute(insExp)
+					try:
+						self.cursor.execute(insExp)
+					except:
+						print(insExp)
 		self.db.commit()
 
 	def GetQueryFromDB(self, qry, toCsvFile = None):
@@ -85,30 +88,20 @@ class SQLite3DB:
 		for row in curQry:
 			dret.append(row)
 
-		if toCsvFile: 
-			fp = open(toCsvFile,'w')
-			for ret in dret:
-				csvret = []
-				for val in ret:
-					if isinstance(val, str):
-						val = val.replace('"',"'")
-						csvret.append((val,'"{}"'.format(val))[',' in val])
-					elif isinstance(val, int) or isinstance(val, float):
-						csvret.append('"{:,.0f}"'.format(val))
-					else:
-						csvret.append(val)
-				try:
-					print(','.join(csvret), file=fp)
-				except UnicodeEncodeError:
-					print(','.join(csvret).encode(), file=fp)
-			fp.close()
+		if toCsvFile:
+			with open(toCsvFile, 'w', encoding='utf-8') as fp:
+				for row in dret:
+					csvWriter = csv.writer(fp)
+					csvWriter.writerow(row)
 		return dret;
+		
+		
 
 #Examples
 
 #-Example Args	
 #--WebToon URLs
-url1 = 'http://comic.naver.com/ncomment/ncomment.nhn?titleId=666671&no=6&levelName=WEBTOON#' #6회차 
+url1 = 'http://comic.naver.com/ncomment/ncomment.nhn?titleId=666671&no=1&levelName=WEBTOON#' #1회차 
 url2 = 'http://comic.naver.com/ncomment/ncomment.nhn?titleId=666671&no=2&levelName=WEBTOON#' #2회차
 
 #--DB Querys
@@ -124,7 +117,7 @@ qryusual = 'select writer_id as 아이디,  writer_ip as 아이피, contents as 
 #-Lib Useage
 #--GetData for DB
 
-cmt = NaverWebtoonCommentScraper(url1) #args: naver webtoon comments url, 
+cmt = NaverWebtoonCommentScraper(url1,100) #args: naver webtoon comments url, 
 
 cmtfld = cmt.GetCommentsTableFields() #for Create DB
 
@@ -148,4 +141,4 @@ DBObj.SetDBFromTable(cmtfld, cmtTbl, tblName)  #
 query = DBObj.GetQueryFromDB(qryusual,saveTo) #Get Qeury Table And Save To CSV File for Excel
 
 
-os.startfile(saveTo)
+#os.startfile(saveTo)
