@@ -61,9 +61,7 @@ class SQLite3DB:
 	def SetDBFromTable(self, tup_fields, list_tbl, tblName):
 		fields = repr(tup_fields)
 		self.cursor.execute('drop table if exists ' + tblName)
-		self.db.commit()
 		self.cursor.execute('create table ' + tblName + fields)
-		self.db.commit()
 		for cmtList in list_tbl:
 			for tup in cmtList:
 				insExp = 'insert into ' + tblName + ' values' + repr(tuple(tup.values()))
@@ -82,12 +80,7 @@ class SQLite3DB:
 
 	def GetQueryFromDB(self, qry, toCsvFile = None):
 		curQry = self.cursor.execute(qry)
-		fields = (fld[0] for fld in curQry.description)
-		dret = [tuple(fields)]
-		
-		for row in curQry:
-			dret.append(row)
-
+		dret = [(fld[0] for fld in curQry.description)] + [row for row in curQry]
 		if toCsvFile:
 			with open(toCsvFile, 'w', encoding='utf-8') as fp:
 				for row in dret:
@@ -125,7 +118,7 @@ cPage = cmt.GetCommentsTotalPageCount()
 
 print('totalPage: ',cPage)
 
-cmtTbl, faultPage = cmt.GetCommentsTable(range(1, cPage+1)) #returns resultTable and fault pages
+cmtTbl, faultPage = cmt.GetCommentsTable(range(1, 3)) #returns resultTable and fault pages
 
 
 print('Total Tuples:', len(cmtTbl))
