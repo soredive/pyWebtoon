@@ -118,7 +118,7 @@ cPage = cmt.GetCommentsTotalPageCount()
 
 print('totalPage: ',cPage)
 
-cmtTbl, faultPage = cmt.GetCommentsTable(range(1, 20)) #returns resultTable and fault pages
+cmtTbl, faultPage = cmt.GetCommentsTable(range(1, 3)) #returns resultTable and fault pages
 
 
 print('Total Tuples:', len(cmtTbl))

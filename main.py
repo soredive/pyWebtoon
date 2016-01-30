@@ -1,35 +1,57 @@
 # -*- coding: utf-8 -*-
 
-from urllib.request import *
-from urllib.parse import *
-from bs4 import BeautifulSoup
-import os
 
-
-def ExtNaverWebtoonImg(webtoonUrl):
-	html = urlopen(webtoonUrl)
-	bsObj = BeautifulSoup(html,'html.parser') 
-	return [el.get('src') for el in bsObj.find_all('img') if el.get('src')]
-
-def SaveSrcImgTo(imgList, szFolder):
-	try:
-		os.mkdir(szFolder)
-	except FileExistsError:
-		pass
-	for img in imgList:
-		path = os.path.normpath(szFolder + '\\' + os.path.basename(img))
-		req = Request(img)
-		req.add_header('Referer',url)
-		data = urlopen(req).read()
-		with open(path,'wb') as fp:
-			fp.write(data)
+from NaverWebtoonCommentScraper import *
+from NaverWebtoonImgScraper import *
+from SQLite3DB import *
 
 
 
-##--Useage--##
+#Examples
 
-url = 'http://comic.naver.com/webtoon/detail.nhn?titleId=666671&no=1&weekday=sun'
+#-Example Args	
+#--WebToon URLs
+url1 = 'http://comic.naver.com/ncomment/ncomment.nhn?titleId=666671&no=1&levelName=WEBTOON#' #1회차 
+url2 = 'http://comic.naver.com/ncomment/ncomment.nhn?titleId=666671&no=2&levelName=WEBTOON#' #2회차
 
-imgList = ExtNaverWebtoonImg(url) #이미지 주소 리스트 얻기
-toonCut  = filter(lambda x:x.startswith('http://imgcomic.naver.net'),imgList) #웹툰컷 이외의 이미지 필터링
-SaveSrcImgTo(toonCut,'.\\downloadimg') 
+#--DB Querys
+dbName = 'webtooncomments.db'
+tblName = 'cmttbl'
+saveTo = 'test.csv'
+qry1 = 'select * from ' + tblName 
+qry2 = 'select * from ' + tblName + ' limit 1,100'
+
+qry_myCmt = 'select * from ' + tblName + ' where writer_nickname="이민서"'
+qryusual = 'select writer_id as 아이디,  writer_ip as 아이피, contents as 내용, registered_ymdt as 등록일시, up_count as 조아용, down_count as 시러욧 from ' + tblName
+
+#-Lib Useage
+#--GetData for DB
+
+
+
+cmt = NaverWebtoonCommentScraper(url1,100) #args: naver webtoon comments url, req Page num, default==15
+
+
+cmtfld = cmt.GetCommentsTableFields() #for Create DB
+
+cPage = cmt.GetCommentsTotalPageCount()
+
+print('totalPage: ',cPage)
+
+cmtTbl, faultPage = cmt.GetCommentsTable(range(68, 70)) #returns resultTable and fault pages
+
+
+print('Total Tuples:', len(cmtTbl))
+print('faultPages:', faultPage)
+
+#--SetData to DB and using Query
+DBObj = SQLite3DB(dbName)
+
+
+DBObj.SetDBFromTable(cmtfld, cmtTbl, tblName)  #
+
+
+query = DBObj.GetQueryFromDB(qryusual,saveTo) #Get Qeury Table And Save To CSV File for Excel
+
+
+os.startfile(saveTo)
