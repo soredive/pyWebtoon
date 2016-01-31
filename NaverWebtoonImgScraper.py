@@ -10,10 +10,14 @@ class NaverWebtoonImgScraper:
 	def __init__(self, webtoonUrl):
 		self.webtoonUrl = webtoonUrl
 		self.html = urlopen(webtoonUrl).read().decode()
+		self.bsObj = BeautifulSoup(self.html,'html.parser')
+
+	def GetWebtoonTitle(self):
+		metaTag = self.bsObj.find_all('meta',{'property':'og:title'})
+		return metaTag[0].get('content')
 	
 	def ExtWebtoonImgList(self):
-		bsObj = BeautifulSoup(self.html,'html.parser') 
-		return [el.get('src') for el in bsObj.find_all('img') if el.get('src')]
+		return [el.get('src') for el in self.bsObj.find_all('img') if el.get('src')]
 	
 	def SaveSrcImgTo(self, imgList, szFolder):
 		try:
@@ -21,9 +25,9 @@ class NaverWebtoonImgScraper:
 		except FileExistsError:
 			pass
 		for img in imgList:
-			path = os.path.normpath(szFolder + '\\' + os.path.basename(img))
+			path = os.path.normpath(szFolder + os.sep + os.path.basename(img))
 			req = Request(img)
-			req.add_header('Referer',url)
+			req.add_header('Referer',self.webtoonUrl)
 			data = urlopen(req).read()
 			with open(path,'wb') as fp:
 				fp.write(data)
@@ -35,4 +39,5 @@ class NaverWebtoonImgScraper:
 		return urlprs.netloc + find.group(1)
 
 
+url = "http://comic.naver.com/webtoon/detail.nhn?titleId=666671&no=11&weekday=sun"
 
