@@ -1,5 +1,4 @@
-# -*- coding: euckr -*-
-
+# -*- coding: utf-8 -*-
 
 from NaverWebtoonCommentScraper import *
 from NaverWebtoonImgScraper import *
