@@ -12,33 +12,22 @@ class SQLite3DB:
 	def SetDBFromDicTable(self, list_dictbl, tblName):
 		fields = tuple(list_dictbl[0][0].keys())
 		self.cursor.execute('drop table if exists ' + tblName)
-		self.db.commit()
-		self.cursor.execute('create table ' + tblName + repr(fields))
-		self.db.commit()
+		self.cursor.execute('create table ' + tblName + repr(fields))	
+		insList = []
 		for cmtList in list_dictbl:
-			for tup in cmtList:
-				insExp = 'insert into ' + tblName + ' values' + repr(tuple(tup.values()))
-				try:
-					self.cursor.execute(insExp)
-				except sqlite3.OperationalError as err:
-					missingKeys = set(fields) - set(tup.keys())
-					for mskey in missingKeys:
-						tup[mskey] = 'NULL'	
-					print(len(missingKeys))
-					newTup = map(lambda x: x.replace('"',r'\"') if isinstance(x,str) else x , tup.values())
-					newTup = map(lambda x: x.replace("'",r"\'") if isinstance(x,str) else x , newTup)
-					newTup = map(lambda x: x.encode('utf-8').decode('utf-8','ignore') if isinstance(x,str) else x, newTup)
-					insExp = 'insert into ' + tblName + ' values' + repr(tuple(newTup))
-					try:
-						self.cursor.execute(insExp)
-					except:
-						print(insExp.encode())
+			for dic in cmtList:
+				if len(dic) < len(fields):
+					missingAttrbs = set(fields) - set(dic.keys())
+					for attr in missingAttrbs:
+						dic[attr] = 'Undefined'
+				insList.append(tuple(dic.values()))
+		self.cursor.executemany('insert into ' + tblName + ' values(' + ('?,'*len(fields))[:-1] + ')', insList)
 		self.db.commit()
-				
+		print(self.cursor.rowcount)
 
 	def GetQueryFromDB(self, qry, toCsvFile = None):
 		curQry = self.cursor.execute(qry)
-		fields = (fld[0] for fld in curQry.description)
+		fields = [fld[0] for fld in curQry.description]
 		dret = [tuple(fields)] + list(curQry)
 		
 		if toCsvFile:
@@ -48,6 +37,7 @@ class SQLite3DB:
 					try:
 						csvWriter.writerow(row)
 					except:
+						print(row[0])
 						with open(toCsvFile, 'a', encoding='utf-8', newline = '') as tmp:
 							tmpWriter = csv.writer(tmp)
 							tmpWriter.writerow(row)
