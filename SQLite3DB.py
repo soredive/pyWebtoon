@@ -24,11 +24,23 @@ class SQLite3DB:
 					missingKeys = set(tup_fields) - set(tup.keys())
 					for mskey in missingKeys:
 						tup[mskey] = 'NULL'	
-					insExp = 'insert into ' + tblName + ' values' + repr(tuple(tup.values()))
+					newTup=[]
+					for val in tup.values():
+						if isinstance(val,str):
+							val = val.replace('"',r'\"')
+							val = val.replace("'",r"\'")
+							# print (type(val))
+							val = val.encode('utf-8').decode('utf-8','ignore')
+							newTup.append(val)
+						else:
+							newTup.append(val)
+
+					insExp = 'insert into ' + tblName + ' values' + repr(tuple(newTup))
+					# print(newTup)
 					try:
 						self.cursor.execute(insExp)
 					except:
-						print(insExp.encode())
+						print(insExp)
 		self.db.commit()
 
 	def GetQueryFromDB(self, qry, toCsvFile = None):
@@ -48,6 +60,10 @@ class SQLite3DB:
 							tmpWriter.writerow(row)
 		return dret;
 
-		
+# prob ='■◎♬◑≠◑±◑♪¥♬◑'		
 
+# db = SQLite3DB('test.db')
+
+# table = [(['a','b','c','d','e'],['1','2','3','4','5'],['6','7','8','9',prob])]
+# db.SetDBFromTable(tuple(table[0]), list(table),'test')
 

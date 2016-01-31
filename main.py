@@ -8,7 +8,7 @@ from tkinter import *
 from tkinter import colorchooser
 from tkinter import filedialog
 from tkinter import messagebox
-
+'''
 database = 'sqlWebtoonComment.db'
 savefile = 'query.csv'
 
@@ -16,7 +16,7 @@ def SaveWebToonToFolder(wtUrl, saveTo):
 	wtCut = NaverWebtoonImgScraper(wtUrl)
 	cutList = filter(lambda x: x.startswith('http://imgcomic.naver.net/'),wtCut.ExtWebtoonImgList())
 	title = wtCut.GetWebtoonTitle()
-	wtCut.SaveSrcImgTo(cutList, saveTo+'\\'+title)
+	wtCut.SaveSrcImgTo(cutList, saveTo+os.sep+title)
 
 def CheckWebToonUrlValid(wtUrl):
 	pattern_sub = 'comic\.naver\.com\/webtoon\/detail\.nhn\?titleId=\d+&no=\d+&weekday=\w+'
@@ -133,7 +133,7 @@ cPage = cmt.GetCommentsTotalPageCount()
 
 print('totalPage: ',cPage)
 
-cmtTbl, faultPage = cmt.GetCommentsTable(range(68, 70)) #returns resultTable and fault pages
+cmtTbl, faultPage = cmt.GetCommentsTable(range(1, cPage+1)) #returns resultTable and fault pages
 
 
 print('Total Tuples:', len(cmtTbl))
@@ -149,5 +149,4 @@ DBObj.SetDBFromTable(cmtfld, cmtTbl, tblName)  #
 query = DBObj.GetQueryFromDB(qryusual,saveTo) #Get Qeury Table And Save To CSV File for Excel
 
 
-os.startfile(saveTo)
-'''
+#os.startfile(saveTo)
