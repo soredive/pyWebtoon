@@ -36,8 +36,23 @@ class NaverWebtoonImgScraper:
 		urlprs = urlparse(self.webtoonUrl)
 		url_reExp = "naver\.comic\.sNCommentUrl\s*=\s*'(.*?)'"
 		find = re.search(url_reExp, self.html)
-		return urlprs.netloc + find.group(1)
+		return urlunparse((urlprs.scheme,urlprs.netloc,find.group(1),'','',''))
+
+#Lib Useage
+'''
+url = "http://comic.naver.com/webtoon/detail.nhn?titleId=666671&no=1&weekday=sun"
+
+wtScrp = NaverWebtoonImgScraper(url)
+
+title = wtScrp.GetWebtoonTitle()
+print(title)
+
+webtoonCommentUrl = wtScrp.GetCommentUrl()
+print('Comment Url: ',webtoonCommentUrl)
 
 
-url = "http://comic.naver.com/webtoon/detail.nhn?titleId=666671&no=11&weekday=sun"
+imgList = wtScrp.ExtWebtoonImgList()
+wtScrp.SaveSrcImgTo(imgList,'.'+os.sep+'webtoonimg')
+
+'''
 

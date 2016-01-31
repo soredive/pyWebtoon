@@ -102,6 +102,7 @@ hWnd.mainloop()
 
 
 '''
+
 #Examples
 
 #-Example Args	
@@ -127,13 +128,11 @@ qryusual = 'select writer_id as 아이디,  writer_ip as 아이피, contents as 
 cmt = NaverWebtoonCommentScraper(url1,100) #args: naver webtoon comments url, req Page num, default==15
 
 
-cmtfld = cmt.GetCommentsTableFields() #for Create DB
-
 cPage = cmt.GetCommentsTotalPageCount()
 
 print('totalPage: ',cPage)
 
-cmtTbl, faultPage = cmt.GetCommentsTable(range(1, cPage+1)) #returns resultTable and fault pages
+cmtTbl, faultPage = cmt.GetCommentsTable(range(69, 70)) #returns resultTable and fault pages
 
 
 print('Total Tuples:', len(cmtTbl))
@@ -143,10 +142,10 @@ print('faultPages:', faultPage)
 DBObj = SQLite3DB(dbName)
 
 
-DBObj.SetDBFromTable(cmtfld, cmtTbl, tblName)  #
+DBObj.SetDBFromDicTable(cmtTbl, tblName)  #
 
 
 query = DBObj.GetQueryFromDB(qryusual,saveTo) #Get Qeury Table And Save To CSV File for Excel
 
 
-#os.startfile(saveTo)
+os.startfile(saveTo)

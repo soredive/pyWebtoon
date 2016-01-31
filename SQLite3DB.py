@@ -9,39 +9,32 @@ class SQLite3DB:
 		self.cursor = self.db.cursor()
 		self.dbName = dbName
 
-	def SetDBFromTable(self, tup_fields, list_tbl, tblName):
-		fields = repr(tup_fields)
+	def SetDBFromDicTable(self, list_dictbl, tblName):
+		fields = tuple(list_dictbl[0][0].keys())
 		self.cursor.execute('drop table if exists ' + tblName)
 		self.db.commit()
-		self.cursor.execute('create table ' + tblName + fields)
+		self.cursor.execute('create table ' + tblName + repr(fields))
 		self.db.commit()
-		for cmtList in list_tbl:
+		for cmtList in list_dictbl:
 			for tup in cmtList:
 				insExp = 'insert into ' + tblName + ' values' + repr(tuple(tup.values()))
 				try:
 					self.cursor.execute(insExp)
 				except sqlite3.OperationalError as err:
-					missingKeys = set(tup_fields) - set(tup.keys())
+					missingKeys = set(fields) - set(tup.keys())
 					for mskey in missingKeys:
 						tup[mskey] = 'NULL'	
-					newTup=[]
-					for val in tup.values():
-						if isinstance(val,str):
-							val = val.replace('"',r'\"')
-							val = val.replace("'",r"\'")
-							# print (type(val))
-							val = val.encode('utf-8').decode('utf-8','ignore')
-							newTup.append(val)
-						else:
-							newTup.append(val)
-
+					print(len(missingKeys))
+					newTup = map(lambda x: x.replace('"',r'\"') if isinstance(x,str) else x , tup.values())
+					newTup = map(lambda x: x.replace("'",r"\'") if isinstance(x,str) else x , newTup)
+					newTup = map(lambda x: x.encode('utf-8').decode('utf-8','ignore') if isinstance(x,str) else x, newTup)
 					insExp = 'insert into ' + tblName + ' values' + repr(tuple(newTup))
-					# print(newTup)
 					try:
 						self.cursor.execute(insExp)
 					except:
-						print(insExp)
+						print(insExp.encode())
 		self.db.commit()
+				
 
 	def GetQueryFromDB(self, qry, toCsvFile = None):
 		curQry = self.cursor.execute(qry)
@@ -60,10 +53,31 @@ class SQLite3DB:
 							tmpWriter.writerow(row)
 		return dret;
 
-# prob ='■◎♬◑≠◑±◑♪¥♬◑'		
 
-# db = SQLite3DB('test.db')
+#Lib Useage
+'''
 
-# table = [(['a','b','c','d','e'],['1','2','3','4','5'],['6','7','8','9',prob])]
-# db.SetDBFromTable(tuple(table[0]), list(table),'test')
+con ='■◎♬◑≠◑±◑♪¥♬◑'
+#con = 'abcd'		
 
+db = SQLite3DB('test.db')
+TBL_NAME = 'test'
+TEST_QRY = 'SELECT * FROM ' +TBL_NAME
+
+
+table =\
+ [[
+ {'id':'ez05****','ip':'49.143.xxx.206','contents': con,'regtime':'2016-01-31T17:54:28.0+0900' , 'impresive':0,'awesome':0},
+ {'id':'ez34****','ip':'49.143.xxx.212','contents': con,'regtime':'2016-01-31T17:54:28.0+0900' , 'impresive':0,'awesome':0},
+ {'id':'ez34****','ip':'49.143.xxx.212','contents': con,'regtime':'2016-01-31T17:54:28.0+0900' , 'impresive':0,'awesome':0},
+ {'id':'ez34****','ip':'49.143.xxx.212','contents': con,'regtime':'2016-01-31T17:54:28.0+0900' , 'impresive':0,'awesome':0},
+ {'id':'ez34****','ip':'49.143.xxx.212','contents': con,'regtime':'2016-01-31T17:54:28.0+0900' , 'impresive':0,'awesome':0}
+ ]]
+
+
+db.SetDBFromDicTable(table, TBL_NAME)
+
+db.GetQueryFromDB(TEST_QRY, 'testqry.csv')
+
+os.startfile('testqry.csv')
+'''
