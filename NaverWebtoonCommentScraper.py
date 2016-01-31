@@ -52,7 +52,7 @@ class NaverWebtoonCommentScraper:
 		return tuple(eval(self.GetCommentPage(1))['comment_list'][0].keys())
 
 #Lib Useage
-
+'''
 from NaverWebtoonImgScraper import *
 
 wtScrp = NaverWebtoonImgScraper('http://comic.naver.com/webtoon/detail.nhn?titleId=666671&no=1&weekday=sun')
@@ -68,3 +68,4 @@ cmtTbl, faultPage = cmtScrp.GetCommentsTable(range(1, cPage + 1)) #returns resul
 print('Total Tuples:', len(cmtTbl))
 print('faultPages:', faultPage)
 
+'''
