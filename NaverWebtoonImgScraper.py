@@ -11,7 +11,6 @@ class NaverWebtoonImgScraper:
 		self.webtoonUrl = webtoonUrl
 		self.html = urlopen(webtoonUrl).read().decode()
 		self.bsObj = BeautifulSoup(self.html,'html.parser')
-
 	def GetWebtoonTitle(self):
 		metaTag = self.bsObj.find_all('meta',{'property':'og:title'})
 		return metaTag[0].get('content')
@@ -25,7 +24,7 @@ class NaverWebtoonImgScraper:
 		except FileExistsError:
 			pass
 		for img in imgList:
-			path = os.path.normpath(szFolder + os.sep + os.path.basename(img))
+			path = os.path.normpath(szFolder + '/' + os.path.basename(img))
 			req = Request(img)
 			req.add_header('Referer',self.webtoonUrl)
 			data = urlopen(req).read()

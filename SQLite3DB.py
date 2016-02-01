@@ -23,7 +23,6 @@ class SQLite3DB:
 				insList.append(tuple(dic.values()))
 		self.cursor.executemany('insert into ' + tblName + ' values(' + ('?,'*len(fields))[:-1] + ')', insList)
 		self.db.commit()
-		print(self.cursor.rowcount)
 
 	def GetQueryFromDB(self, qry, toCsvFile = None):
 		curQry = self.cursor.execute(qry)

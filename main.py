@@ -8,7 +8,7 @@ from tkinter import *
 from tkinter import colorchooser
 from tkinter import filedialog
 from tkinter import messagebox
-'''
+
 database = 'sqlWebtoonComment.db'
 savefile = 'query.csv'
 
@@ -16,7 +16,9 @@ def SaveWebToonToFolder(wtUrl, saveTo):
 	wtCut = NaverWebtoonImgScraper(wtUrl)
 	cutList = filter(lambda x: x.startswith('http://imgcomic.naver.net/'),wtCut.ExtWebtoonImgList())
 	title = wtCut.GetWebtoonTitle()
-	wtCut.SaveSrcImgTo(cutList, saveTo+os.sep+title)
+	title = re.sub('[/:?*"<>|"]', '', title)
+	wtCut.SaveSrcImgTo(cutList, saveTo+'/'+title)
+	return title
 
 def CheckWebToonUrlValid(wtUrl):
 	pattern_sub = 'comic\.naver\.com\/webtoon\/detail\.nhn\?titleId=\d+&no=\d+&weekday=\w+'
@@ -26,17 +28,24 @@ def CheckWebToonUrlValid(wtUrl):
 		mainHtml = mainPage.read().decode()
 		bs = BeautifulSoup(mainHtml,"html.parser")
 		subInsts = bs.find_all('a')
+		maxchap = 1 ; lastchap =''
 		for inst in subInsts:
 			href = inst.get('href')
 			if re.search('\/webtoon\/detail\.nhn\?titleId=\d+&no=\d+&weekday=\w+', href):
-				prs = urlparse(wtUrl)
-				return urlunparse((prs.scheme, prs.netloc,href,'','',''))
+				if int(parse_qs(href)['no'][0]) > maxchap :
+					maxchap = int(parse_qs(href)['no'][0])
+					lastchap = href
+		prs = urlparse(wtUrl)
+		return urlunparse((prs.scheme, prs.netloc,lastchap,'','',''))
 	elif re.search(pattern_sub, wtUrl):
 		return wtUrl
 	else:
 		return None
 
-def GetChapterRange():
+def GetChapterRange(webtoonUrl):
+	if ent2.get() == '':
+		urlQry = urlparse(webtoonUrl).query
+		return 1, int(parse_qs(urlQry)['no'][0]) + 1
 	chapterNums = list(map(int,re.findall('\d+',ent2.get())))
 	if len(chapterNums) < 2 : chapterNums.append(1)
 	chapterNums.sort()
@@ -63,11 +72,11 @@ def On_Btn1Click():
 	webtoonurl = CheckWebToonUrlValid(ent1.get())
 	if webtoonurl:
 		saveTopath =  filedialog.askdirectory(title = 'SaveTo')
-		start, end = GetChapterRange()
+		start, end = GetChapterRange(webtoonurl)
 		for i, chap in enumerate(range(start, end)):
 			chapUrl = re.sub('no=\d+','no={}'.format(chap),webtoonurl)
-			SaveWebToonToFolder(chapUrl, saveTopath)
-			print('downloading... {}of{}'.format(i+1, end - start))
+			chapTitle = SaveWebToonToFolder(chapUrl, saveTopath)
+			print('downloading webtoon {}... {}of{}'.format(chapTitle, i+1, end - start))
 	else:
 		messagebox.showerror('wrong url',webtoonurl)
 
@@ -85,7 +94,7 @@ Label(text = 'Naver webtoon URL').pack(anchor = 'nw')
 ent1 = Entry(hWnd)
 ent1.pack(anchor ='nw')
 
-Label(text = 'DownLoad chapter Range(ex:1~9, ~149)').pack(anchor = 'nw')
+Label(text = 'DownLoad chapter Range(ex:1~9, ~149, blank: whole chapter)').pack(anchor = 'nw')
 
 ent2 = Entry(hWnd)
 ent2.pack(anchor ='nw')
@@ -99,6 +108,7 @@ btn1.pack(anchor = 'nw')
 hWnd.mainloop()
 
 
+CheckWebToonUrlValid('http://comic.naver.com/webtoon/list.nhn?titleId=666671&weekday=sun')
 
 
 '''
@@ -132,7 +142,7 @@ cPage = cmt.GetCommentsTotalPageCount()
 
 print('totalPage: ',cPage)
 
-cmtTbl, faultPage = cmt.GetCommentsTable(range(69, 70)) #returns resultTable and fault pages
+cmtTbl, faultPage = cmt.GetCommentsTable(range(50, 100)) #returns resultTable and fault pages
 
 
 print('Total Tuples:', len(cmtTbl))
@@ -149,3 +159,4 @@ query = DBObj.GetQueryFromDB(qryusual,saveTo) #Get Qeury Table And Save To CSV F
 
 
 os.startfile(saveTo)
+'''
