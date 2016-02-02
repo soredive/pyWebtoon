@@ -29,7 +29,8 @@ class NaverWebtoonCommentScraper:
 		return math.ceil(eval(self.GetCommentPage(1))['total_count'] / int(self.keys['pageSize']))
 
 	def GetCommentsTable(self, reqPgAsSeq, retry=2):  #range(1, 10 + 1) or {1,4,6,10,....} [2,3]
-		ret = []; faultPage = {}
+		ret = []; faultPage = {}; cmtObj = None
+		field = self.GetCommentsTableFields()
 		if retry < 0: 
 			faultPage[reqPgAsSeq[0]]=self.GetCommentPage(reqPgAsSeq[0])
 			print('Page get fault ',reqPgAsSeq[0])
@@ -44,12 +45,17 @@ class NaverWebtoonCommentScraper:
 				ret+=subret
 				faultPage.update(subfaultPage)
 			else:
-				ret.append(cmtObj['comment_list'])
-
-		return ret, faultPage
+				cmtTups = cmtObj['comment_list']
+				for tup in cmtObj['comment_list']:
+					if len(tup) < len(field):
+						missingAttrbs = set(field) - set(tup.keys())
+						for attr in missingAttrbs:
+							tup[attr] = 'Undefined'
+					ret.append(tuple(tup.values()))
+		return [field], ret, faultPage
 	
 	def GetCommentsTableFields(self):
-		return tuple(eval(self.GetCommentPage(1))['comment_list'][0].keys())
+		return list(eval(self.GetCommentPage(1))['comment_list'][0].keys())
 
 #Lib Useage
 '''
@@ -58,14 +64,15 @@ from NaverWebtoonImgScraper import *
 wtScrp = NaverWebtoonImgScraper('http://comic.naver.com/webtoon/detail.nhn?titleId=666671&no=1&weekday=sun')
 cmtUrl = wtScrp.GetCommentUrl()
 
-cmtScrp = NaverWebtoonCommentScraper(cmtUrl,100) #args: naver webtoon comments url, req Page num, default==15
+cmtScrp = NaverWebtoonCommentScraper(cmtUrl) #args: naver webtoon comments url, req Page num, default==15
 cPage = cmtScrp.GetCommentsTotalPageCount()
 
 print('totalPage: ',cPage)
 
-cmtTbl, faultPage = cmtScrp.GetCommentsTable(range(1, cPage + 1)) #returns resultTable and fault pages
+cmtTbl, faultPage = cmtScrp.GetCommentsTable(range(2, 3)) #returns resultTable and fault pages
 
 print('Total Tuples:', len(cmtTbl))
 print('faultPages:', faultPage)
 
+print(cmtScrp.GetCommentsTableFields() + cmtTbl)
 '''

@@ -11,12 +11,12 @@ from tkinter import messagebox
 
 database = 'sqlWebtoonComment.db'
 savefile = 'query.csv'
-
+'''
 def SaveWebToonToFolder(wtUrl, saveTo):
 	wtCut = NaverWebtoonImgScraper(wtUrl)
 	cutList = filter(lambda x: x.startswith('http://imgcomic.naver.net/'),wtCut.ExtWebtoonImgList())
 	title = wtCut.GetWebtoonTitle()
-	title = re.sub('[/:?*"<>|"]', '', title)
+	title = ''.join(filter(lambda x: x not in '/:?*"<>|"',title))
 	wtCut.SaveSrcImgTo(cutList, saveTo+'/'+title)
 	return title
 
@@ -71,12 +71,13 @@ def GetQueryFromDB(qry ,dbName):
 def On_Btn1Click():
 	webtoonurl = CheckWebToonUrlValid(ent1.get())
 	if webtoonurl:
-		saveTopath =  filedialog.askdirectory(title = 'SaveTo')
+		saveTopath = filedialog.askdirectory(title = 'SaveTo')
 		start, end = GetChapterRange(webtoonurl)
 		for i, chap in enumerate(range(start, end)):
 			chapUrl = re.sub('no=\d+','no={}'.format(chap),webtoonurl)
 			chapTitle = SaveWebToonToFolder(chapUrl, saveTopath)
 			print('downloading webtoon {}... {}of{}'.format(chapTitle, i+1, end - start))
+		print('download complete')
 	else:
 		messagebox.showerror('wrong url',webtoonurl)
 
@@ -142,7 +143,7 @@ cPage = cmt.GetCommentsTotalPageCount()
 
 print('totalPage: ',cPage)
 
-cmtTbl, faultPage = cmt.GetCommentsTable(range(50, 100)) #returns resultTable and fault pages
+field, cmtTbl, faultPage = cmt.GetCommentsTable(range(1, cPage + 1)) #returns resultTable and fault pages
 
 
 print('Total Tuples:', len(cmtTbl))
@@ -152,11 +153,11 @@ print('faultPages:', faultPage)
 DBObj = SQLite3DB(dbName)
 
 
-DBObj.SetDBFromDicTable(cmtTbl, tblName)  #
+
+DBObj.SetDBFromTable(field + cmtTbl, tblName)  #
 
 
 query = DBObj.GetQueryFromDB(qryusual,saveTo) #Get Qeury Table And Save To CSV File for Excel
 
 
 os.startfile(saveTo)
-'''

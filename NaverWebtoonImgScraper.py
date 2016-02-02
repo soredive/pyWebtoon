@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 import os, re
 
 
+
 class NaverWebtoonImgScraper:
 	def __init__(self, webtoonUrl):
 		self.webtoonUrl = webtoonUrl
@@ -16,15 +17,13 @@ class NaverWebtoonImgScraper:
 		return metaTag[0].get('content')
 	
 	def ExtWebtoonImgList(self):
-		return [el.get('src') for el in self.bsObj.find_all('img') if el.get('src')]
-	
+		return list(filter(None, [el.get('src') for el in self.bsObj.find_all('img')]))
+		
 	def SaveSrcImgTo(self, imgList, szFolder):
-		try:
+		if not os.path.isdir(szFolder):
 			os.mkdir(szFolder)
-		except FileExistsError:
-			pass
 		for img in imgList:
-			path = os.path.normpath(szFolder + '/' + os.path.basename(img))
+			path = os.path.join(szFolder,os.path.basename(img))
 			req = Request(img)
 			req.add_header('Referer',self.webtoonUrl)
 			data = urlopen(req).read()
