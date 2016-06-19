@@ -13,7 +13,7 @@ class SQLite3DB:
 		field, *tup = list_table
 		self.cursor.execute('drop table if exists ' + tblName)
 		self.cursor.execute('create table ' + tblName + repr(tuple(field)))
-		self.cursor.executemany('insert into ' + tblName + ' values(' + ('?,'*len(field))[:-1] + ')', tup)
+		self.cursor.executemany('insert into ' + tblName + ' values(' + ','.join('?'*len(field)) + ')', tup)
 		self.db.commit()
 		return len(tup)	
 
